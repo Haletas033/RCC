@@ -1,13 +1,12 @@
-use crate::preprocessor::{get_directive, Preprocessor};
+use crate::preprocessor::{Preprocessor};
 
 mod preprocessor;
 
 fn main() {
     let mut processor: Preprocessor = Preprocessor::new();
-    println!("{:?}", processor.process("#define A B
-#define B A
+    println!("{:?}", processor.process("#define 'A' 42
 
 int main() {
-	A B
+	'A'
 }"));
 }
