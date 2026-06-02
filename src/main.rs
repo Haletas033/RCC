@@ -4,9 +4,9 @@ mod preprocessor;
 
 fn main() {
     let mut processor: Preprocessor = Preprocessor::new();
-    println!("{:?}", processor.process("#define 'A' 42
+    println!("{:?}", processor.process("#define FOO 42
 
 int main() {
-	'A'
+	FOO
 }"));
 }

@@ -81,9 +81,9 @@ impl Preprocessor {
             if line.is_empty() { continue }
             let trimmed_line = line.trim();
             if trimmed_line.starts_with("//") { continue }
-            let substituted_line = self.substitute_line(trimmed_line)?;
-            if substituted_line.starts_with('#') {
-                let directive = get_directive(&substituted_line)?;
+
+            if trimmed_line.starts_with('#') {
+                let directive = get_directive(&trimmed_line)?;
                 match directive {
                     Define { name, value } => {
                         self.define_map.insert(name, value);
@@ -91,6 +91,7 @@ impl Preprocessor {
                     _ => {},
                 }
             } else {
+                let substituted_line = self.substitute_line(trimmed_line)?;
                 output.push_str(&substituted_line);
                 output.push('\n');
             }
