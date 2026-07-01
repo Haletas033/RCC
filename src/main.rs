@@ -6,7 +6,10 @@ fn main() {
     let mut processor: Preprocessor = Preprocessor::new();
     println!("{:?}", processor.process("#define FOO 42
 
+
 int main() {
+    FOO
+    #undef FOO
 	FOO
 }"));
 }

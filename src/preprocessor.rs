@@ -1,10 +1,10 @@
 use std::collections::{HashMap, HashSet};
-use crate::preprocessor::Directive::Define;
+use crate::preprocessor::Directive::*;
 
 #[derive(Debug)]
 pub enum Directive {
     Define { name: String, value: Option<String> },
-    Undef,
+    Undef { name: String },
     Ifdef,
     Ifndef,
     Endif,
@@ -87,6 +87,9 @@ impl Preprocessor {
                 match directive {
                     Define { name, value } => {
                         self.define_map.insert(name, value);
+                    },
+                    Undef { name } => {
+                        self.define_map.remove(&name);
                     }
                     _ => {},
                 }
@@ -100,6 +103,33 @@ impl Preprocessor {
     }
 }
 
+fn parse_identifier(name: &str) -> Result<(), String> {
+    if name.starts_with('\'') || name.starts_with('\"') {
+        return Err(
+            format!("Macro name must be an identifier, got: \"{}\" instead.", name).to_string()
+        );
+    }
+    let mut chars = name.chars();
+    match chars.next() {
+        Some(c) if c.is_ascii_alphabetic() || c == '_' => {}
+        _ => {
+            return Err(format!(
+                "Macro name must be an identifier, got: \"{}\" instead.",
+                name
+            ));
+        }
+    }
+
+    if chars.any(|c| !(c.is_ascii_alphanumeric() || c == '_')) {
+        return Err(format!(
+            "Macro name must be an identifier, got: \"{}\" instead.",
+            name
+        ));
+    }
+
+    Ok(())
+}
+
 pub fn get_directive(line: &str) -> Result<Directive, String> {
     let clean_line = line.strip_prefix('#');
 
@@ -108,7 +138,8 @@ pub fn get_directive(line: &str) -> Result<Directive, String> {
     match directive_type {
         "define" => {
             let define_name = parts.next().ok_or("Failed to get define name")?;
-            if define_name.starts_with('\'') || define_name.starts_with('\"') { return Err(format!("Macro name must be an identifier, got: \"{}\" instead.", define_name).to_string()); }
+            parse_identifier(define_name)?;
+
             let remaining: Vec<&str> = parts.collect();
             Ok(Define {
                 name: define_name.to_string(),
@@ -117,6 +148,14 @@ pub fn get_directive(line: &str) -> Result<Directive, String> {
                 } else {
                     Some(remaining.join(" "))
                 },
+            })
+        },
+        "undef" => {
+            let undef_name = parts.next().ok_or("Failed to get define name")?;
+            parse_identifier(undef_name)?;
+
+            Ok(Undef {
+                name: undef_name.to_string()
             })
         }
         _ => Err("Unsupported directive type".to_string())
